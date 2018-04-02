@@ -39,7 +39,11 @@ class KNN:
 
 		for x in db_train:
 			dist = distance(test, x, args)
-			distances.append((x, dist))
+			w = 1/(dist + 0.1)
+			if weight:
+				distances.append((x, w))
+			else:
+				distances.append((x, dist))
 		distances.sort(key=operator.itemgetter(1))
 
 		neighbours = []

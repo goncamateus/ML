@@ -5,7 +5,7 @@ from source.distances import euclidian_distance
 from sklearn.model_selection import KFold
 
 
-def cross_validation(knn, hm_neighbours):
+def cross_validation(knn, hm_neighbours, weight):
 	accuracy = []
 	kf = KFold(n_splits=10, shuffle=True)
 	for k in hm_neighbours: 
@@ -18,7 +18,7 @@ def cross_validation(knn, hm_neighbours):
 			local_accuracy.append(0)				
 			for test in db_test:
 				neighbours = knn.get_neighbours(
-					db_train, test, k, euclidian_distance, True)
+					db_train, test, k, euclidian_distance, weight)
 				result = knn.predict(neighbours)
 				if (int(test[-1])==result):
 					local_accuracy[-1] += 1
@@ -31,11 +31,24 @@ def cross_validation(knn, hm_neighbours):
 
 	return accuracy
 
-if __name__ == '__main__':	
-	knn = KNN('kc2.arff')
-	cv = cross_validation(knn, hm_neighbours=[1,2,3,5,7,9,11,13,15])
-	plt.xticks(np.array([x for x in range(15)]),[1,2,3,5,7,9,11,13,15])
-	plt.plot(cv)
-	plt.ylabel('Accuracy')
-	plt.xlabel('Neighbours')
-	plt.show()
+if __name__ == '__main__':
+	datasets = ['kc1.arff','kc2.arff']	
+	for ds in datasets:
+		knn = KNN(ds)
+		print('Unweighted')
+		cv = cross_validation(knn, hm_neighbours=[1,2,3,5,7,9,11,13,15], weight= False)
+		plt.xticks(np.array([x for x in range(15)]),[1,2,3,5,7,9,11,13,15])	
+		plt.plot(cv)
+		plt.ylabel('Accuracy')
+		plt.xlabel('Neighbours')
+		plt.title('Unweighted')
+		plt.show()
+		
+		print('Weighted')
+		cv = cross_validation(knn, hm_neighbours=[1,2,3,5,7,9,11,13,15], weight= True)
+		plt.xticks(np.array([x for x in range(15)]),[1,2,3,5,7,9,11,13,15])	
+		plt.plot(cv)
+		plt.ylabel('Accuracy')
+		plt.xlabel('Neighbours')
+		plt.title('Weighted')
+		plt.show()	
