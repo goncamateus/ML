@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+import numpy as np
 from source.knns import KNN
 from source.distances import euclidian_distance
 from sklearn.model_selection import KFold
@@ -25,10 +27,15 @@ def cross_validation(knn, hm_neighbours):
 		for lac in local_accuracy:
 			accuracy[-1] += lac
 		accuracy[-1] /= len(local_accuracy)
-		print('Accuracy for k={} :'.format(k), accuracy[-1])
+		#print('Accuracy for k={} :'.format(k), accuracy[-1])
 
 	return accuracy
 
 if __name__ == '__main__':	
 	knn = KNN('kc2.arff')
-	cross_validation(knn, hm_neighbours=[1,2,3,5,7,9,11,13,15])
+	cv = cross_validation(knn, hm_neighbours=[1,2,3,5,7,9,11,13,15])
+	plt.xticks(np.array([x for x in range(15)]),[1,2,3,5,7,9,11,13,15])
+	plt.plot(cv)
+	plt.ylabel('Accuracy')
+	plt.xlabel('Neighbours')
+	plt.show()
