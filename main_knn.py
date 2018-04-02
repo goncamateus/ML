@@ -4,30 +4,30 @@ from sklearn.model_selection import KFold
 
 
 def cross_validation(knn, hm_neighbours):
-	ac = []
+	accuracy = []
 	kf = KFold(n_splits=10, shuffle=True)
 	for k in hm_neighbours: 
-		localac = []
+		local_accuracy = []
 		for train_index, test_index in kf.split(knn.folds):
 			db_train = knn.folds[train_index]
 			db_train = db_train.tolist()
 			db_test = knn.folds[test_index]
 			db_test = db_test.tolist()
-			localac.append(0)				
+			local_accuracy.append(0)				
 			for test in db_test:
 				neighbours = knn.get_neighbours(
 					db_train, test, k, euclidian_distance, True)
 				result = knn.predict(neighbours)
 				if (int(test[-1])==result):
-					localac[-1] += 1
-			localac[-1] = localac[-1]/len(db_test)
-		ac.append(0)
-		for lac in localac:
-			ac[-1] += lac
-		ac[-1] /= len(localac)
-		print('Accuracy for k={} :'.format(k), ac[-1])
+					local_accuracy[-1] += 1
+			local_accuracy[-1] = local_accuracy[-1]/len(db_test)
+		accuracy.append(0)
+		for lac in local_accuracy:
+			accuracy[-1] += lac
+		accuracy[-1] /= len(local_accuracy)
+		print('Accuracy for k={} :'.format(k), accuracy[-1])
 
-	return ac
+	return accuracy
 
 if __name__ == '__main__':	
 	knn = KNN('kc2.arff')
