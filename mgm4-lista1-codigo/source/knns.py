@@ -19,7 +19,7 @@ class KNN:
 
 	def load_dataset(self, db_name):
 		db_path = os.path.join(
-			os.path.abspath(os.path.curdir), 'databases')
+			os.path.abspath(os.path.pardir), 'databases')
 		if(self.dataset.endswith('.arff')):
 			db = arff.loadarff(os.path.join(db_path, db_name))
 			df = pd.DataFrame(db[0])
