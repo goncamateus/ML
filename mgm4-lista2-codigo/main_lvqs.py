@@ -13,7 +13,7 @@ from sklearn.neighbors import KNeighborsClassifier as KNN
 def load_dataset(db_name):
 	db_path = os.path.join(
 			os.path.abspath(os.path.pardir), 'databases')
-	if(self.dataset.endswith('.arff')):
+	if(db_name.endswith('.arff')):
 		db = arff.loadarff(os.path.join(db_path, db_name))
 		df = pd.DataFrame(db[0])
 	else:
@@ -30,7 +30,7 @@ def load_dataset(db_name):
 		else:
 			value[-1] = 1
 
-	return dataset
+	return values
 
 def accuracy_score(y_test, pred):
 	accuracy = 0

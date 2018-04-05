@@ -3,19 +3,18 @@ from prototype import generation
 from distances import euclidian_distance
 
 def lvq1(dataset, hw_many, weight=False):
-	ds = dataset #problem maybe
+	ds = dataset
 	prototypes = generation(dataset, hw_many)
 	for k in range(hw_many):
 		for _, x in enumerate(ds):
 			knn = KNN()
-			neighbours = knn.get_neighbours(ds, prototypes[k], k=1, weight=weight)
-			print 'proto',prototypes[k]
-			print 'predict', knn.predict(neighbours)
-			# if knn.predict(neighbours) != x[-1]:
-			# 	#DUVIDA NA LINHA DE BAIXO - APROXIMO ALGUM PARAMETRO OU A CLASSE??
-			# 	prototypes[k][-1] = prototypes[k][-1] + 0.1*euclidian_distance(x, prototypes, x.size)
-			# else:
-			# 	prototypes[k][-1] = prototypes[k][-1] - 0.1*euclidian_distance(x, prototypes, x.size)
+			neighbours = knn.get_neighbours(prototypes, x, k=1, weight=weight)
+			if knn.predict(neighbours) != x[-1]:
+				for v in prototypes[k][:-1]:
+					v = v + 0.1*euclidian_distance(x, prototypes[k], x.size)
+			else:
+				for v in prototypes[k][:-1]:
+					v = v - 0.1*euclidian_distance(x, prototypes[k], x.size)
 	return prototypes
 
 def lvq21(dataset, hw_many, weight=False):
@@ -28,9 +27,8 @@ def lvq21(dataset, hw_many, weight=False):
 		return (mini > s)
 
 	prototypes = lvq1(dataset, hw_many, weight=weight)
-	for k in range(hw_many):
-		pass
-		#for _, x in 
+	# for k in range(hw_many):
+	# 	for _, x in dataset:
 
 	return prototypes
 
