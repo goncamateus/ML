@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os
 import time
 from scipy.io import arff
 from source.lvqs import lvq1, lvq21, lvq3
