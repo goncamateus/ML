@@ -27,3 +27,4 @@ def generation(dataset, k):
 		prototypes[i][-1] = randint(0, 1)
 
 	return prototypes
+	

@@ -46,7 +46,7 @@ if __name__ == '__main__':
 	dataset = load_dataset('kc1.arff')
 
 	lvqs = [lvq1, lvq21, lvq3]
-	scores = np.array([])
+	scores = np.zeros(shape=(3,1))
 
 	fig, ax = plt.subplots()
 	image, = ax.plot()
@@ -68,9 +68,8 @@ if __name__ == '__main__':
 
 		knn = KNN(n_neighbors=1)
 		knn.fit(X_train, y_train)
-
-		pred = knn.predict(X_test)
-		scores[i] = np.append(scores[i], accuracy_score(y_test, pred))
+		
+		scores[i] = knn.predict(X_test)
 		print(scores[i])
 
 		image.set_data(scores[i])
