@@ -45,7 +45,7 @@ class KNN:
 				value[-1] = 1
 		self.folds = np.array(values)
 
-	def get_neighbours(self, db_train, test, k, distance, weight):
+	def get_neighbours(self, db_train, test, k, distance=euclidian_distance, weight=False):
 		distances = []
 		args = len(test) - 1
 

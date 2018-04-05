@@ -4,6 +4,7 @@ import pandas as pd
 import time
 from scipy.io import arff
 from source.lvqs import lvq1, lvq21, lvq3
+from source.prototype import generation
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
 
@@ -16,19 +17,18 @@ def load_dataset(db_name):
 		df = pd.DataFrame(db[0])
 	else:
 		df = pd.read_csv(os.path.join(db_path, db_name))
-	values = df.get_values().tolist()
+	values = df.get_values()
 	for value in values:
-			try:
-				b = value[-1].decode('utf-8')
-			except AttributeError:
-				b = value[-1]
+		try:
+			b = value[-1].decode('utf-8')
+		except AttributeError:
+			b = value[-1]
 
-			if (b == 'false'):
-				value[-1] = 0
-			else:
-				value[-1] = 1
+		if (b == 'false'):
+			value[-1] = 0
+		else:
+			value[-1] = 1
 
-	dataset = np.array(values)
 	return dataset
 
 def accuracy_score(y_test, pred):
@@ -53,9 +53,12 @@ if __name__ == '__main__':
 	plt.xlabel('Neighbours')
 	plt.draw()
 	
-	for i, lvq in enumerate(lvqs):		
-		data_train = lvq(dataset)
+	for i, lvq in enumerate(lvqs):
 		
+		before = time.time()		
+		data_train = lvq(dataset)
+		ts = time.time() - before
+
 		X = data_train[:, :-1]		
 		y = data_train[:, -1]
 
@@ -66,9 +69,11 @@ if __name__ == '__main__':
 		knn.fit(X_train, y_train)
 
 		pred = knn.predict(X_test)
-		np.append(scores[i], accuracy_score(y_test, pred))
+		scores[i] = np.append(scores[i], accuracy_score(y_test, pred))
 		print(scores[i])
 
 		image.set_data(scores[i])
+		plt.suptitle(lvq.__name__, fontsize=14, fontweight='bold')
+		plt.title('Timestamp: {} seconds'.format(ts))
 		plt.draw()
 		fig.savefig("{}.png".format(lvq.__name__))
