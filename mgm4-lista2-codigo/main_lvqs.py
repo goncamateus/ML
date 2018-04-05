@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import time
 from scipy.io import arff
-from source.lvqs import lvq1
+from source.lvqs import lvq1, lvq21, lvq3
 from source.knn import KNN
 
 def load_dataset(db_name):
@@ -29,12 +29,13 @@ def load_dataset(db_name):
 
 	return values
 
+
 if __name__ == '__main__':
 	
 	dataset = load_dataset('kc1.arff')
 
-	lvqs = [lvq1]
-	scores = np.zeros(shape=(3,1))
+	lvqs = ['Nothing', lvq1, lvq21, lvq3]
+	scores = np.zeros(shape=(4,1))
 
 	# fig, ax = plt.subplots()
 	# image, = ax.plot()
@@ -46,9 +47,11 @@ if __name__ == '__main__':
 		
 		data = dataset
 		np.random.shuffle(data)		
-		before = time.time()		
-		data = lvq(data, 5)
-		ts = time.time() - before
+		if i!=0:
+			before = time.time()		
+			prototypes = lvq(data, 10)
+			data = np.concatenate((data, prototypes), axis=0)
+			ts = time.time() - before
 
 		np.random.shuffle(data)		
 
