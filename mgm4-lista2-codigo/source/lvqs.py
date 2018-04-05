@@ -1,3 +1,4 @@
+import numpy as np
 from knn import KNN
 from prototype import generation
 from distances import euclidian_distance
@@ -15,7 +16,7 @@ def lvq1(dataset, hw_many, weight=False):
 			else:
 				for v in prototypes[k][:-1]:
 					v = v - 0.1*euclidian_distance(x, prototypes[k], x.size)
-	return prototypes
+	return np.concatenate((dataset, prototypes), axis=0)
 
 def lvq21(dataset, hw_many, weight=False):
 	
@@ -27,9 +28,13 @@ def lvq21(dataset, hw_many, weight=False):
 		return (mini > s)
 
 	prototypes = lvq1(dataset, hw_many, weight=weight)
-	# for k in range(hw_many):
-	# 	for _, x in dataset:
-
+	for k in range(hw_many):
+		for _, x in dataset:
+			knn = KNN()
+			neighbours = knn.get_neighbours(prototypes, x, 2)
+			ei = neighbours[0]
+			ej = neighbours[1]
+			if in_window(x, ei, ej, w)
 	return prototypes
 
 def lvq3(dataset):

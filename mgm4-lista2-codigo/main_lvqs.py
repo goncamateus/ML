@@ -4,11 +4,8 @@ import pandas as pd
 import os
 import time
 from scipy.io import arff
-from source.lvqs import lvq1, lvq21, lvq3
-from source.prototype import generation
-from sklearn.neighbors import KNeighborsClassifier as KNN
-
-
+from source.lvqs import lvq1
+from source.knn import KNN
 
 def load_dataset(db_name):
 	db_path = os.path.join(
@@ -32,48 +29,43 @@ def load_dataset(db_name):
 
 	return values
 
-def accuracy_score(y_test, pred):
-	accuracy = 0
-	for i, acc in enumerate(y_test):
-		if acc == pred[i]:
-			accuracy += 1
-
-	accuracy /= len(y_test)
-	return accuracy
-
 if __name__ == '__main__':
 	
 	dataset = load_dataset('kc1.arff')
 
-	lvqs = [lvq1, lvq21, lvq3]
+	lvqs = [lvq1]
 	scores = np.zeros(shape=(3,1))
 
-	fig, ax = plt.subplots()
-	image, = ax.plot()
-	plt.ylabel('Accuracy')
-	plt.xlabel('Neighbours')
-	plt.draw()
+	# fig, ax = plt.subplots()
+	# image, = ax.plot()
+	# plt.ylabel('Accuracy')
+	# plt.xlabel('Neighbours')
+	# plt.draw()
 	
 	for i, lvq in enumerate(lvqs):
 		
+		data = dataset
+		np.random.shuffle(data)		
 		before = time.time()		
-		data_train = lvq(dataset)
+		data = lvq(data, 5)
 		ts = time.time() - before
 
-		X = data_train[:, :-1]		
-		y = data_train[:, -1]
+		np.random.shuffle(data)		
 
-		X_train, X_test, y_train, y_test = \
-			train_test_split(X, y, test_size=0.33, random_state=42)
+		data_train = data[:-int(len(data)*0.67)]
+		data_test = data[int(len(data)*0.67):]
 
-		knn = KNN(n_neighbors=1)
-		knn.fit(X_train, y_train)
-		
-		scores[i] = knn.predict(X_test)
+		for x in data_test:
+			knn = KNN()
+			neighbours = knn.get_neighbours(data_train, x, 3)
+			if knn.predict(neighbours) == x[-1]:
+				scores[i] += 1
+
+		scores[i] = scores[i]/len(data_test)
 		print(scores[i])
 
-		image.set_data(scores[i])
-		plt.suptitle(lvq.__name__, fontsize=14, fontweight='bold')
-		plt.title('Timestamp: {} seconds'.format(ts))
-		plt.draw()
-		fig.savefig("{}.png".format(lvq.__name__))
+		# image.set_data(scores[i])
+		# plt.suptitle(lvq.__name__, fontsize=14, fontweight='bold')
+		# plt.title('Timestamp: {} seconds'.format(ts))
+		# plt.draw()
+		# fig.savefig("{}.png".format(lvq.__name__))
