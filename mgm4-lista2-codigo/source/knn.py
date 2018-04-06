@@ -7,7 +7,6 @@ class KNN:
 	def get_neighbours(self, db_train, test, k, weight=False):
 		distances = []
 		args = test.size - 1
-
 		for _, x in enumerate(db_train):
 			dist = euclidian_distance(test, x, args)
 			w = 1/(dist + 0.1)

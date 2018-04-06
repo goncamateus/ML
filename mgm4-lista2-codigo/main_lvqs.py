@@ -7,6 +7,7 @@ from scipy.io import arff
 from source.lvqs import lvq1, lvq21, lvq3
 from source.knn import KNN
 
+
 def load_dataset(db_name):
 	db_path = os.path.join(
 			os.path.abspath(os.path.pardir), 'databases')
@@ -29,46 +30,46 @@ def load_dataset(db_name):
 
 	return values
 
+def no_generator():
+	pass
+
 
 if __name__ == '__main__':
 	
+
 	dataset = load_dataset('kc1.arff')
 
-	lvqs = ['Nothing', lvq1, lvq21, lvq3]
-	scores = np.zeros(shape=(4,1))
+	lvqs = [no_generator, lvq1, lvq21, lvq3]
+	scores = np.zeros(shape=(4,2))
 
-	# fig, ax = plt.subplots()
-	# image, = ax.plot()
-	# plt.ylabel('Accuracy')
-	# plt.xlabel('Neighbours')
-	# plt.draw()
-	
 	for i, lvq in enumerate(lvqs):
 		
 		data = dataset
-		np.random.shuffle(data)		
-		if i!=0:
-			before = time.time()		
-			prototypes = lvq(data, 10)
+		np.random.shuffle(data)
+		before = time.time()		
+		if i!=0:			
+			prototypes = lvq(data, 10, weight=False)
 			data = np.concatenate((data, prototypes), axis=0)
-			ts = time.time() - before
+		ts = time.time() - before
 
-		np.random.shuffle(data)		
+		for j,k in enumerate([1,3]):
+			for shu in range(10):
+				np.random.shuffle(data)
+			data_train = data[:-int(len(data)*0.67)]
+			data_test = data[int(len(data)*0.67):]
+			in_score = 0
+			for x in data_test:
+				knn = KNN()
+				neighbours = knn.get_neighbours(data_train, x, k, weight=False)
+				if knn.predict(neighbours) == x[-1]:
+					in_score += 1
+			scores[i][j] = in_score/len(data_test)
 
-		data_train = data[:-int(len(data)*0.67)]
-		data_test = data[int(len(data)*0.67):]
-
-		for x in data_test:
-			knn = KNN()
-			neighbours = knn.get_neighbours(data_train, x, 3)
-			if knn.predict(neighbours) == x[-1]:
-				scores[i] += 1
-
-		scores[i] = scores[i]/len(data_test)
 		print(scores[i])
 
-		# image.set_data(scores[i])
-		# plt.suptitle(lvq.__name__, fontsize=14, fontweight='bold')
-		# plt.title('Timestamp: {} seconds'.format(ts))
-		# plt.draw()
-		# fig.savefig("{}.png".format(lvq.__name__))
+	plt.plot(scores)
+	plt.suptitle('LVQs', fontsize=14, fontweight='bold')
+	plt.title('Comparisson between methods')
+	plt.draw()
+	plt.savefig("lvqs.png")
+
