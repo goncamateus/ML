@@ -41,6 +41,7 @@ if __name__ == '__main__':
 
 	lvqs = [no_generator, lvq1, lvq21, lvq3]
 	scores = np.zeros(shape=(4,2))
+	hw_many = 10
 
 	for i, lvq in enumerate(lvqs):
 		
@@ -48,22 +49,34 @@ if __name__ == '__main__':
 		np.random.shuffle(data)
 		before = time.time()		
 		if i!=0:			
-			prototypes = lvq(data, 10, weight=False)
-			data = np.concatenate((data, prototypes), axis=0)
-		ts = time.time() - before
-
-		for j,k in enumerate([1,3]):
-			for shu in range(10):
-				np.random.shuffle(data)
-			data_train = data[:-int(len(data)*0.67)]
-			data_test = data[int(len(data)*0.67):]
-			in_score = 0
-			for x in data_test:
-				knn = KNN()
-				neighbours = knn.get_neighbours(data_train, x, k, weight=False)
-				if knn.predict(neighbours) == x[-1]:
-					in_score += 1
-			scores[i][j] = in_score/len(data_test)
+			prototypes = lvq(data, hw_many, weight=False)
+			ts = time.time() - before
+			for j,k in enumerate([1,3]):
+				for shu in range(10):
+					np.random.shuffle(data)
+				np.random.shuffle(prototypes)
+				data_train = prototypes
+				data_test = data[:500]
+				in_score = 0
+				for x in data_test:
+					knn = KNN()
+					neighbours = knn.get_neighbours(data_train, x, k, weight=False)
+					if knn.predict(neighbours) == x[-1]:
+						in_score += 1
+				scores[i][j] = in_score/len(data_test)
+		else:
+			for j,k in enumerate([1,3]):
+				for shu in range(10):
+					np.random.shuffle(data)
+				data_train = data[:-int(len(data)*0.67)]
+				data_test = data[int(len(data)*0.67):]
+				in_score = 0
+				for x in data_test:
+					knn = KNN()
+					neighbours = knn.get_neighbours(data_train, x, k, weight=False)
+					if knn.predict(neighbours) == x[-1]:
+						in_score += 1
+				scores[i][j] = in_score/len(data_test)
 
 		print(scores[i])
 
