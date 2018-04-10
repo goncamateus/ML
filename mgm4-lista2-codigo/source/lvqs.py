@@ -1,21 +1,22 @@
 import numpy as np
-from knn import KNN
-from prototype import generation
+from sklearn import neighbors
 from distances import euclidian_distance
 
-def lvq1(dataset, hw_many, weight=False):
-	ds = dataset
-	prototypes = generation(dataset, hw_many)
+def lvq1(dataset, protos, hw_many, weight=False):
+	x = dataset[:,:-1]
+	y = dataset[:, -1]
+	prototypes = np.copy(protos)
 	for k in range(hw_many):
-		for _, x in enumerate(ds):
-			knn = KNN()
-			neighbours = knn.get_neighbours(prototypes, x, k=1, weight=weight)
-			if knn.predict(neighbours) != x[-1]:
-				for v in prototypes[k][:-1]:
-					v = v + 0.1*euclidian_distance(x, prototypes[k], x.size)
+		knn = neighbors.NearestNeighbors(n_neighbors=1)
+		alfa = 0.1 * (1.0 - (k/float(hw_many)))
+		for i in range(len(x)):
+			knn.fit(prototypes[:, :-1])
+			_, index = knn.kneighbors([x[i]])
+			if prototypes[index[0][0]][-1] == y[i]:
+				prototypes[index[0][0]][:-1] = prototypes[index[0][0]][:-1] + alfa*(x[i] - prototypes[index[0][0]][:-1])
 			else:
-				for v in prototypes[k][:-1]:
-					v = v - 0.1*euclidian_distance(x, prototypes[k], x.size)
+				prototypes[index[0][0]][:-1] = prototypes[index[0][0]][:-1] - alfa*(x[i] - prototypes[index[0][0]][:-1])
+
 	return prototypes
 
 def in_window(test, prot1, prot2, w):
@@ -27,56 +28,80 @@ def in_window(test, prot1, prot2, w):
 
 	return (mini > s)
 
-def lvq21(dataset, hw_many, weight=False):
+def lvq21(dataset, protos, hw_many, weight=False):
+
+	x = dataset[:,:-1]
+	y = dataset[:, -1]
 	
-	prototypes = lvq1(dataset, hw_many, weight=weight)
-	prot = np.zeros(shape=(hw_many,dataset[0].size))
-	for k in range(hw_many-1):
-		for _, x in enumerate(dataset):
-			knn = KNN()
-			neighbours = knn.get_neighbours(prototypes, x, k=2, weight=weight)
-			prot[k] = neighbours[0]
-			prot[k+1] = neighbours[1]
-			if in_window(x, prot[k], prot[k+1], w=0.2):
-				if prot[k][-1] != prot[k+1][-1]:
-					if prot[k][-1] == x[-1]:
-						for v in prot[k][:-1]:
-							v = v + 0.1*euclidian_distance(x, prot[k], x.size)
-						for v in prot[k+1][:-1]:
-							v = v - 0.1*euclidian_distance(x, prot[k+1], x.size)
-					elif prot[k+1][-1] == x[-1]:
-						for v in prot[k+1][:-1]:
-							v = v + 0.1*euclidian_distance(x, prot[k+1], x.size)
-						for v in prot[k][:-1]:
-							v = v - 0.1*euclidian_distance(x, prot[k], x.size)
-	return prot
+	prototypes = lvq1(dataset, protos, hw_many, weight=weight)
+	prot = [0,0]
 
-def lvq3(dataset, hw_many, weight=False):
+	for k in range(hw_many):
 
-	prototypes = lvq1(dataset, hw_many, weight=weight)
-	prot = np.zeros(shape=(hw_many,dataset[0].size))
-	for k in range(hw_many-1):
-		for _, x in enumerate(dataset):
-			knn = KNN()
-			neighbours = knn.get_neighbours(prototypes, x, k=2, weight=weight)
-			prot[k] = neighbours[0]
-			prot[k+1] = neighbours[1]
-			if in_window(x, prot[k], prot[k+1], w=0.2):
-				if prot[k][-1] != prot[k+1][-1]:
-					if prot[k][-1] == x[-1]:
-						for v in prot[k][:-1]:
-							v = v + 0.1*euclidian_distance(x, prot[k], x.size)
-						for v in prot[k+1][:-1]:
-							v = v - 0.1*euclidian_distance(x, prot[k+1], x.size)
-					elif prot[k+1][-1] == x[-1]:
-						for v in prot[k+1][:-1]:
-							v = v + 0.1*euclidian_distance(x, prot[k+1], x.size)
-						for v in prot[k][:-1]:
-							v = v - 0.1*euclidian_distance(x, prot[k], x.size)
+		alfa = 0.1 * (1.0 - (k/float(hw_many)))
+		knn = neighbors.NearestNeighbors(n_neighbors=2)
 
-				elif prot[k][-1] == x[-1]:
-					for v in prot[k][:-1]:
-						v = v + 0.1*0.1*euclidian_distance(x, prot[k], x.size)
-					for v in prot[k+1][:-1]:
-						v = v + 0.1*0.1*euclidian_distance(x, prot[k+1], x.size)
-	return prot
+		for i in range(len(x)):
+
+			knn.fit(prototypes[:, :-1], prototypes[:,-1])
+			_, index = knn.kneighbors([x[i]])
+			prot[0] = prototypes[index[0][0]]
+			prot[1] = prototypes[index[0][1]]
+
+			if in_window(x[i], prot[0], prot[1], w=0.2):
+
+				if prot[0][-1] != prot[1][-1]:
+
+					if prot[0][-1] == y[i]:
+						prot[0][:-1] = prot[0][:-1] + alfa*(x[i] - prot[0][:-1])
+						prot[1][:-1] = prot[1][:-1] - alfa*(x[i] - prot[1][:-1])
+
+					elif prot[1][-1] == y[i]:
+						prot[1][:-1] = prot[1][:-1] + alfa*(x[i] - prot[1][:-1])
+						prot[0][:-1] = prot[0][:-1] - alfa*(x[i] - prot[0][:-1])
+
+			prototypes[index[0][0]] = prot[0]
+			prototypes[index[0][1]] = prot[1]
+
+	return prototypes
+
+def lvq3(dataset, protos, hw_many, weight=False):
+
+	x = dataset[:,:-1]
+	y = dataset[:, -1]
+	
+	prototypes = lvq1(dataset, protos, hw_many, weight=weight)
+	prot = [0,0]
+
+	for k in range(hw_many):
+
+		alfa = 0.1 * (1.0 - (k/float(hw_many)))
+		knn = neighbors.NearestNeighbors(n_neighbors=2)
+
+		for i in range(len(x)):
+
+			knn.fit(prototypes[:, :-1], prototypes[:,-1])
+			_, index = knn.kneighbors([x[i]])
+			prot[0] = prototypes[index[0][0]]
+			prot[1] = prototypes[index[0][1]]
+
+			if in_window(x[i], prot[0], prot[1], w=0.2):
+
+				if prot[0][-1] != prot[1][-1]:
+
+					if prot[0][-1] == y[i]:
+						prot[0][:-1] = prot[0][:-1] + alfa*(x[i] - prot[0][:-1])
+						prot[1][:-1] = prot[1][:-1] - alfa*(x[i] - prot[1][:-1])
+
+					elif prot[1][-1] == y[i]:
+						prot[1][:-1] = prot[1][:-1] + alfa*(x[i] - prot[1][:-1])
+						prot[0][:-1] = prot[0][:-1] - alfa*(x[i] - prot[0][:-1])
+
+				elif prot[0][-1] == y[i]:
+					prot[0][:-1] = prot[0][:-1] + 0.1*alfa*(prot[0][:-1] - x[i])
+					prot[1][:-1] = prot[1][:-1] + 0.1*alfa*(prot[1][:-1] - x[i])
+
+			prototypes[index[0][0]] = prot[0]
+			prototypes[index[0][1]] = prot[1]
+
+	return prototypes
