@@ -28,7 +28,7 @@ def load_dataset(db_name):
 		except AttributeError:
 			b = value[-1]
 
-		if (b == 'false'):
+		if (b in ['false','no']):
 			value[-1] = 0
 		else:
 			value[-1] = 1
@@ -43,9 +43,23 @@ if __name__ == '__main__':
 
 	lvqs = [lvq1, lvq21, lvq3]
 	scores = np.zeros(shape=(4,2))
-	hw_many = 10
+	hw_many = 100
 	protos = generation(dataset, hw_many)
 
+	classes = protos[:,-1]
+	falses = (classes == 0).sum()
+	x = np.arange(2)
+	heigh = [falses, len(classes)-falses]
+
+	bar = plt.figure(1)
+	plt.bar(x, heigh)
+	plt.xticks(x,('False', 'True'))
+	plt.ylim((0, len(classes)))
+	plt.title('Data balance {} prototypes'.format(hw_many))
+	plt.suptitle('Prototypes')
+	bar.savefig('Data_balance_{}_prototypes.png'.format(hw_many))
+
+	total_acc = np.zeros(shape=(3,2))
 	for i, lvq in enumerate(lvqs):
 
 		data = dataset
@@ -56,6 +70,7 @@ if __name__ == '__main__':
 		prototypes = lvq(data, protos, hw_many, weight=False)
 		ts = time.time() - before
 
+		acc = np.arange(2)
 		for j,k in enumerate([1,3]):
 
 			for shu in range(10):
@@ -72,4 +87,14 @@ if __name__ == '__main__':
 			for t in range(len(pred)):
 				if pred[t]  == y_test[t]:
 					ok += 1
-			print(ok/len(pred))
+			print((ok/len(pred)))
+			total_acc[i][j] = (ok/len(pred))
+
+	knns = plt.figure(2)
+	x = np.arange(3)
+	knn1, = plt.plot(total_acc[:,0], label="1-NN", linestyle='--')
+	knn3, = plt.plot(total_acc[:,1], label="3-NN", linewidth=2)
+	plt.legend(handles=[knn1, knn3])
+	plt.xticks(x,('LVQ1', 'LVQ2.1', 'LVQ3'))
+	plt.title('Accuracy comparrisson between LVQs')
+	knns.savefig('Accuracy_comparrisson_{}_prototypes.png'.format(hw_many))

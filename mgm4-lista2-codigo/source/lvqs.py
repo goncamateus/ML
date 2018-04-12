@@ -33,7 +33,7 @@ def lvq21(dataset, protos, hw_many, weight=False):
 	x = dataset[:,:-1]
 	y = dataset[:, -1]
 	
-	prototypes = lvq1(dataset, protos, hw_many, weight=weight)
+	prototypes = np.copy(protos)
 	prot = [0,0]
 
 	for k in range(hw_many):
@@ -70,7 +70,7 @@ def lvq3(dataset, protos, hw_many, weight=False):
 	x = dataset[:,:-1]
 	y = dataset[:, -1]
 	
-	prototypes = lvq1(dataset, protos, hw_many, weight=weight)
+	prototypes = np.copy(protos)
 	prot = [0,0]
 
 	for k in range(hw_many):

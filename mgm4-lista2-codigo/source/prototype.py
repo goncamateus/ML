@@ -12,7 +12,11 @@ def generation(dataset, k):
 				numb = dataset[randrange(len(dataset))][j]
 			prototypes[i][j] = numb
 
-		prototypes[i][-1] = dataset[randrange(len(dataset))][-1]
+		c1 = randint(1, 2)
+		if c1 == 1:
+			prototypes[i][-1] = 1
+		else:
+			prototypes[i][-1] = 0
 
 	return prototypes
 	
