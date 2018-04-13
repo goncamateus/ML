@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
 	lvqs = [lvq1, lvq21, lvq3]
 	scores = np.zeros(shape=(4,2))
-	hw_many = 100
+	hw_many = 10
 	protos = generation(dataset, hw_many)
 
 	classes = protos[:,-1]
@@ -95,6 +95,7 @@ if __name__ == '__main__':
 	knn1, = plt.plot(total_acc[:,0], label="1-NN", linestyle='--')
 	knn3, = plt.plot(total_acc[:,1], label="3-NN", linewidth=2)
 	plt.legend(handles=[knn1, knn3])
+	plt.ylim(0.7, 0.9)
 	plt.xticks(x,('LVQ1', 'LVQ2.1', 'LVQ3'))
 	plt.title('Accuracy comparrisson between LVQs')
 	knns.savefig('Accuracy_comparrisson_{}_prototypes.png'.format(hw_many))
