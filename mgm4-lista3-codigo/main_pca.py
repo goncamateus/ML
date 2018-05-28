@@ -1,11 +1,15 @@
+import os
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
-import time
 from scipy.io import arff
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.cross_validation import train_test_split
 from sklearn.decomposition import PCA as sklearnPCA
+from sklearn.metrics import accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
+
 from source.pca import PCA
 
 
@@ -40,7 +44,6 @@ def load_dataset(db_name):
 if __name__ == '__main__':
 
     dataset = load_dataset('kc1.arff')
-    total_acc = np.zeros(shape=(3, 2))
     data = dataset
 
     for shu in range(30):
@@ -50,34 +53,14 @@ if __name__ == '__main__':
     Y = data[:, -1]
 
     # for i in range(1, np.shape(X)[1]+1):
-    pca = PCA(X, k=10)
+    pca = PCA(X, k=5)
     pca_data = pca.run()
-    sklearn_pca = sklearnPCA(n_components=10)
-    Y_sklearn = new_x = sklearn_pca.fit_transform(X)
-    print(pca_data)
-    # print(Y_sklearn)
-    # print('\nPara i =', i, ':\n', pca_data)
 
-    # data_train = prototypes
-    # data_test = data
-    # y_test = data_test[:,-1]
+    X_train, X_test = pca_data[:int(len(pca_data)*0.7)], pca_data[int(len(pca_data)*0.7):]
+    y_train, y_test = Y[:int(len(pca_data)*0.7)].astype(int), Y[int(len(pca_data)*0.7):].astype(int)
 
-    # knn = KNeighborsClassifier(n_neighbors=k)
-    # knn.fit(data_train[:, :-1], data_train[:,-1])
-    # pred = knn.predict(data_test[:, :-1])
-    # ok = 0
-    # for t in range(len(pred)):
-    #     if pred[t]  == y_test[t]:
-    #         ok += 1
-    # print((ok/len(pred)))
-    # total_acc[i][j] = (ok/len(pred))
-
-    # knns = plt.figure(2)
-    # x = np.arange(3)
-    # knn1, = plt.plot(total_acc[:,0], label="1-NN", linestyle='--')
-    # knn3, = plt.plot(total_acc[:,1], label="3-NN", linewidth=2)
-    # plt.legend(handles=[knn1, knn3])
-    # plt.ylim(0.7, 0.9)
-    # plt.xticks(x,('LVQ1', 'LVQ2.1', 'LVQ3'))
-    # plt.title('Accuracy comparrisson between LVQs')
-    # knns.savefig('Accuracy_comparrisson_{}_prototypes.png'.format(hw_many))
+    knn = KNeighborsClassifier(n_neighbors=3)
+    knn.fit(X_train, y_train)
+    pred = knn.predict(X_test)
+    print("For " + str(20) +
+          " dimensions, the accuracy was: " + str(accuracy_score(y_test, pred)))

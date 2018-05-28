@@ -39,4 +39,5 @@ class PCA():
         pairs = self.choose_best()
         projection_matrix = [pairs[i][1] for i in range(self._k)]
         projection_matrix = np.array(projection_matrix).T
-        return projection_matrix
+        final = self._data.dot(projection_matrix)
+        return final
