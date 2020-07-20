@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn import neighbors
-from distances import euclidian_distance
+from source.distances import euclidian_distance
+from tqdm import tqdm
+
 
 def lvq1(dataset, protos, hw_many, weight=False):
 	x = dataset[:,:-1]
@@ -73,7 +75,7 @@ def lvq3(dataset, protos, hw_many, weight=False):
 	prototypes = np.copy(protos)
 	prot = [0,0]
 
-	for k in range(hw_many):
+	for k in tqdm(range(hw_many)):
 
 		alfa = 0.1 * (1.0 - (k/float(hw_many)))
 		knn = neighbors.NearestNeighbors(n_neighbors=2)

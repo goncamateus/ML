@@ -1,101 +1,86 @@
+import os
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
-import time
 from scipy.io import arff
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from source.lvqs import lvq1, lvq21, lvq3
-from prototype import generation
+
+from source.lvqs import lvq1, lvq3, lvq21
+from source.prototype import generation
 
 
 def load_dataset(db_name):
-	db_path = os.path.join(
-			os.path.abspath(os.path.pardir), 'databases')
-	if(db_name.endswith('.arff')):
-		db = arff.loadarff(os.path.join(db_path, db_name))
-		df = pd.DataFrame(db[0])
-	else:
-		df = pd.read_csv(os.path.join(db_path, db_name))
-
-	df_norm = (df.iloc[:,:-1] - df.iloc[:,:-1].mean()) / (df.iloc[:,:-1].max() - df.iloc[:,:-1].min())
-	values = df.get_values()
-	values[:,:-1] = df_norm
-
-	for value in values:
-		try:
-			b = value[-1].decode('utf-8')
-		except AttributeError:
-			b = value[-1]
-
-		if (b in ['false','no']):
-			value[-1] = 0
-		else:
-			value[-1] = 1
-
-
-	return values
+    db_path = os.path.join(
+        os.path.abspath(os.path.pardir), 'databases')
+    if(db_name.endswith('.arff')):
+        db = arff.loadarff(os.path.join(db_path, db_name))
+        df = pd.DataFrame(db[0])
+    else:
+        df = pd.read_csv(os.path.join(db_path, db_name))
+    sex = df['Sex']
+    num_sex = list()
+    for s in sex:
+        if s == 'F':
+            ns = 0
+        elif s == 'M':
+            ns = 1
+        else:
+            ns = 2
+        num_sex.append(ns)
+    df['Sex'] = np.array(num_sex)
+    return df
 
 
 if __name__ == '__main__':
 
-	dataset = load_dataset('jm1.arff')
+    df = load_dataset('abalone.csv')
+    classes = list(set(df['Rings'].tolist()))
+    dataset = df.values
 
-	lvqs = [lvq1, lvq21, lvq3]
-	scores = np.zeros(shape=(4,2))
-	hw_many = 10
-	protos = generation(dataset, hw_many)
+    lvqs = [lvq3]
+    hw_many = 100
+    print('Selecting prototypes')
+    protos, proto_balance = generation(dataset, hw_many, classes)
 
-	classes = protos[:,-1]
-	falses = (classes == 0).sum()
-	x = np.arange(2)
-	heigh = [falses, len(classes)-falses]
+    x = dataset[:, :-1]
+    y = dataset[:, -1]
+    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
+    classifier = KNeighborsClassifier(n_neighbors=1)
+    classifier.fit(X_train, y_train)
+    y_pred = classifier.predict(X_test)
+    report = classification_report(y_test, y_pred)
+    print('1-NN without LVQ:\n', report)
 
-	bar = plt.figure(1)
-	plt.bar(x, heigh)
-	plt.xticks(x,('False', 'True'))
-	plt.ylim((0, len(classes)))
-	plt.title('Data balance {} prototypes'.format(hw_many))
-	plt.suptitle('Prototypes')
-	bar.savefig('Data_balance_{}_prototypes.png'.format(hw_many))
+    total_acc = np.zeros(shape=(3, 2))
+    for i, lvq in enumerate(lvqs):
 
-	total_acc = np.zeros(shape=(3,2))
-	for i, lvq in enumerate(lvqs):
+        data = dataset
+        for shu in range(10):
+            np.random.shuffle(data)
 
-		data = dataset
-		for shu in range(10):
-			np.random.shuffle(data)
+        before = time.time()
+        print('LVQ')
+        prototypes = lvq(data, protos, hw_many, weight=False)
+        ts = time.time() - before
+        print(f'Took {ts} s')
 
-		before = time.time()					
-		prototypes = lvq(data, protos, hw_many, weight=False)
-		ts = time.time() - before
+        # acc = np.arange(2)
+        for j, k in enumerate([1]):
 
-		acc = np.arange(2)
-		for j,k in enumerate([1,3]):
+            for shu in range(10):
+                np.random.shuffle(data)
 
-			for shu in range(10):
-				np.random.shuffle(data)
+            data_train = prototypes
+            data_test = data
+            y_test = data_test[:, -1]
 
-			data_train = prototypes
-			data_test = data
-			y_test = data_test[:,-1]
+            knn = KNeighborsClassifier(n_neighbors=k)
+            knn.fit(data_train[:, :-1], data_train[:, -1])
+            pred = knn.predict(data_test[:, :-1])
+            report = classification_report(y_test, pred)
+            print(f'{k}-NN with LVQ:\n', report)
 
-			knn = KNeighborsClassifier(n_neighbors=k)
-			knn.fit(data_train[:, :-1], data_train[:,-1])
-			pred = knn.predict(data_test[:, :-1])
-			ok = 0
-			for t in range(len(pred)):
-				if pred[t]  == y_test[t]:
-					ok += 1
-			print((ok/len(pred)))
-			total_acc[i][j] = (ok/len(pred))
-
-	knns = plt.figure(2)
-	x = np.arange(3)
-	knn1, = plt.plot(total_acc[:,0], label="1-NN", linestyle='--')
-	knn3, = plt.plot(total_acc[:,1], label="3-NN", linewidth=2)
-	plt.legend(handles=[knn1, knn3])
-	plt.ylim(0.7, 0.9)
-	plt.xticks(x,('LVQ1', 'LVQ2.1', 'LVQ3'))
-	plt.title('Accuracy comparrisson between LVQs')
-	knns.savefig('Accuracy_comparrisson_{}_prototypes.png'.format(hw_many))
