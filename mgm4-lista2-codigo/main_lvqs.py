@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.io import arff
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -42,19 +42,21 @@ if __name__ == '__main__':
     dataset = df.values
 
     lvqs = [lvq3]
-    hw_many = 100
+    hw_many = 1000
     print('Selecting prototypes')
     protos, proto_balance = generation(dataset, hw_many, classes)
 
     x = dataset[:, :-1]
     y = dataset[:, -1]
-    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
-    classifier = KNeighborsClassifier(n_neighbors=1)
-    classifier.fit(X_train, y_train)
-    y_pred = classifier.predict(X_test)
-    report = classification_report(y_test, y_pred)
-    print('1-NN without LVQ:\n', report)
-
+    acc = list()
+    for _ in range(30):
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
+        classifier = KNeighborsClassifier(n_neighbors=1)
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        acc.append(accuracy_score(y_test, y_pred))
+    acc = np.mean(acc)
+    print(acc)
     total_acc = np.zeros(shape=(3, 2))
     for i, lvq in enumerate(lvqs):
 
@@ -81,6 +83,6 @@ if __name__ == '__main__':
             knn = KNeighborsClassifier(n_neighbors=k)
             knn.fit(data_train[:, :-1], data_train[:, -1])
             pred = knn.predict(data_test[:, :-1])
-            report = classification_report(y_test, pred)
+            report = accuracy_score(y_test, pred)
             print(f'{k}-NN with LVQ:\n', report)
 
