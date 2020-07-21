@@ -8,6 +8,7 @@ from scipy.io import arff
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 
 from source.lvqs import lvq1, lvq3, lvq21
 from source.prototype import generation
@@ -48,15 +49,20 @@ if __name__ == '__main__':
 
     x = dataset[:, :-1]
     y = dataset[:, -1]
-    acc = list()
-    for _ in range(30):
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
-        classifier = KNeighborsClassifier(n_neighbors=1)
-        classifier.fit(X_train, y_train)
-        y_pred = classifier.predict(X_test)
-        acc.append(accuracy_score(y_test, y_pred))
-    acc = np.mean(acc)
-    print(acc)
+    for k in [1, 2, 3, 4, 5]:
+        acc = list()
+        for _ in range(30):
+            X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
+            scaler = StandardScaler()
+            scaler.fit(X_train)
+            X_train = scaler.transform(X_train)
+            X_test = scaler.transform(X_test)
+            classifier = KNeighborsClassifier(n_neighbors=1)
+            classifier.fit(X_train, y_train)
+            y_pred = classifier.predict(X_test)
+            acc.append(accuracy_score(y_test, y_pred))
+        acc = np.mean(acc)
+        print(f'{k}-NN without LVQ:\n', acc)
     total_acc = np.zeros(shape=(3, 2))
     for i, lvq in enumerate(lvqs):
 
@@ -71,18 +77,16 @@ if __name__ == '__main__':
         print(f'Took {ts} s')
 
         # acc = np.arange(2)
-        for j, k in enumerate([1]):
+        for j, k in enumerate([1, 2, 3, 4, 5]):
 
-            for shu in range(10):
-                np.random.shuffle(data)
-
-            data_train = prototypes
-            data_test = data
-            y_test = data_test[:, -1]
+            X_train = prototypes[:, :-1]
+            y_train = prototypes[:, -1]
+            X_test = dataset[:, :-1]
+            y_test = dataset[:, -1]
 
             knn = KNeighborsClassifier(n_neighbors=k)
-            knn.fit(data_train[:, :-1], data_train[:, -1])
-            pred = knn.predict(data_test[:, :-1])
-            report = accuracy_score(y_test, pred)
-            print(f'{k}-NN with LVQ:\n', report)
+            knn.fit(X_train, y_train)
+            pred = knn.predict(X_test)
+            acc = accuracy_score(y_test, pred)
+            print(f'{k}-NN with LVQ:\n', acc)
 
